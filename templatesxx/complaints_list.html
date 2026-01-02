@@ -1,0 +1,305 @@
+{% extends "base.html" %}
+
+{% block title %}Complaints List{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-xl shadow-sm border border-slate-200">
+  <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+    <h5 class="text-lg font-semibold text-slate-800">Complaints</h5>
+    <a
+      href="{{ url_for('create_complaint') }}"
+      class="inline-flex items-center px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium shadow-sm hover:bg-primary-light transition-colors"
+    >
+      + New Complaint
+    </a>
+  </div>
+
+  <div class="px-6 py-4 border-b border-slate-100">
+    <form
+      class="grid grid-cols-1 md:grid-cols-6 gap-3 items-end"
+      method="get"
+      id="filter-form"
+    >
+      <div class="md:col-span-2">
+        <label class="block text-xs font-medium text-slate-600 mb-1">
+          Search
+        </label>
+        <input
+          type="text"
+          name="search"
+          class="w-full rounded-lg border-slate-300 text-sm shadow-sm focus:ring-primary focus:border-primary"
+          placeholder="By number, title, description"
+          value="{{ request.args.get('search','') }}"
+        />
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1">
+          Division
+        </label>
+        <select
+          class="w-full rounded-lg border-slate-300 text-sm shadow-sm focus:ring-primary focus:border-primary filter-auto"
+          name="division_id"
+        >
+          <option value="">All</option>
+          {% for d in divisions %}
+          <option
+            value="{{ d.id }}"
+            {% if request.args.get('division_id')|int == d.id %}selected{% endif %}
+          >
+            {{ d.name }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1">
+          Security Service
+        </label>
+        <select
+          class="w-full rounded-lg border-slate-300 text-sm shadow-sm focus:ring-primary focus:border-primary filter-auto"
+          name="security_service_id"
+        >
+          <option value="">All</option>
+          {% for s in services %}
+          <option
+            value="{{ s.id }}"
+            {% if request.args.get('security_service_id')|int == s.id %}selected{% endif %}
+          >
+            {{ s.name }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1">
+          Local Authority
+        </label>
+        <select
+          class="w-full rounded-lg border-slate-300 text-sm shadow-sm focus:ring-primary focus:border-primary filter-auto"
+          name="local_authority_id"
+        >
+          <option value="">All</option>
+          {% for a in authorities %}
+          <option
+            value="{{ a.id }}"
+            {% if request.args.get('local_authority_id')|int == a.id %}selected{% endif %}
+          >
+            {{ a.name }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="flex gap-2">
+        <div class="flex-1">
+          <label class="block text-xs font-medium text-slate-600 mb-1">
+            Type
+          </label>
+          <select
+            class="w-full rounded-lg border-slate-300 text-sm shadow-sm focus:ring-primary focus:border-primary filter-auto"
+            name="complaint_type"
+          >
+            <option value="">All</option>
+            <option
+              value="IGMAT"
+              {% if request.args.get('complaint_type') == 'IGMAT' %}selected{% endif %}
+            >
+              IGMAT
+            </option>
+            <option
+              value="Normal"
+              {% if request.args.get('complaint_type') == 'Normal' %}selected{% endif %}
+            >
+              Normal
+            </option>
+          </select>
+        </div>
+        <div class="flex-1">
+          <label class="block text-xs font-medium text-slate-600 mb-1">
+            Deadline
+          </label>
+          <select
+            class="w-full rounded-lg border-slate-300 text-sm shadow-sm focus:ring-primary focus:border-primary filter-auto"
+            name="deadline_status"
+          >
+            <option value="">All</option>
+            <option
+              value="Expired"
+              {% if request.args.get('deadline_status') == 'Expired' %}selected{% endif %}
+            >
+              Expired
+            </option>
+            <option
+              value="Approaching"
+              {% if request.args.get('deadline_status') == 'Approaching' %}selected{% endif %}
+            >
+              Approaching (&le; {{ DEADLINE_APPROACHING_THRESHOLD_DAYS }} days)
+            </option>
+          </select>
+        </div>
+      </div>
+      <div class="md:col-span-6 flex justify-end gap-2">
+        <button
+          type="submit"
+          class="inline-flex items-center px-3 py-2 rounded-lg border border-slate-300 text-sm text-slate-700 hover:bg-slate-50"
+        >
+          Filter
+        </button>
+        <a
+          href="{{ url_for('list_complaints') }}"
+          class="inline-flex items-center px-3 py-2 rounded-lg text-sm text-slate-500 hover:text-slate-700"
+        >
+          Clear
+        </a>
+      </div>
+    </form>
+  </div>
+
+  <div class="px-6 py-4 overflow-x-auto">
+    <table class="min-w-full text-sm">
+      <thead>
+        <tr class="text-left text-xs font-semibold text-slate-500 border-b border-slate-200">
+          <th class="py-2 pr-4">#</th>
+          <th class="py-2 pr-4">Title</th>
+          <th class="py-2 pr-4">Division</th>
+          <th class="py-2 pr-4">Security Service</th>
+          <th class="py-2 pr-4">Local Authority</th>
+          <th class="py-2 pr-4">Type</th>
+          <th class="py-2 pr-4">Deadline</th>
+          <th class="py-2 pr-4">Status</th>
+          <th class="py-2 pr-4">Validated</th>
+          <th class="py-2 pr-4 text-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        {% if complaints %} {% for c in complaints %}
+        <tr class="hover:bg-slate-50">
+          <td class="py-2 pr-4">
+            <a
+              href="{{ url_for('complaint_detail', complaint_id=c.id) }}"
+              class="text-primary hover:underline"
+            >
+              {{ c.display_number }}
+            </a>
+          </td>
+          <td class="py-2 pr-4">{{ c.title }}</td>
+          <td class="py-2 pr-4">{{ c.division.name }}</td>
+          <td class="py-2 pr-4">{{ c.security_service.name if c.security_service else 'Not specified' }}</td>
+          <td class="py-2 pr-4">{{ c.local_authority.name }}</td>
+          <td class="py-2 pr-4">
+            {% if c.complaint_type == 'IGMAT' %}
+            <span
+              class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700"
+            >
+              IGMAT
+            </span>
+            {% else %}
+            <span
+              class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700"
+            >
+              Normal
+            </span>
+            {% endif %}
+          </td>
+          <td class="py-2 pr-4">
+            {{ c.deadline.strftime('%Y-%m-%d') }}
+          </td>
+          <td class="py-2 pr-4">
+            {% if c.deadline_status == 'Expired' %}
+            <span
+              class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-slate-200 text-slate-800"
+            >
+              Expired
+            </span>
+            {% elif c.deadline_status == 'Approaching' %}
+            <span
+              class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800"
+            >
+              Approaching
+            </span>
+            {% else %}
+            <span
+              class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800"
+            >
+              On Track
+            </span>
+            {% endif %}
+          </td>
+          <td class="py-2 pr-4">
+            {% if c.is_validated %}
+            <span
+              class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800"
+            >
+              Validated
+            </span>
+            {% else %}
+            <span
+              class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600"
+            >
+              Pending
+            </span>
+            {% endif %}
+          </td>
+          <td class="py-2 pr-0">
+            <div class="flex justify-end gap-1">
+              <a
+                href="{{ url_for('complaint_detail', complaint_id=c.id) }}"
+                class="px-2 py-1 rounded-md border border-slate-200 text-xs text-slate-700 hover:bg-slate-50"
+                title="View"
+              >
+                View
+              </a>
+              <a
+                href="{{ url_for('edit_complaint', complaint_id=c.id) }}"
+                class="px-2 py-1 rounded-md border border-blue-200 text-xs text-blue-700 hover:bg-blue-50"
+                title="Edit"
+              >
+                Edit
+              </a>
+              <a
+                href="{{ url_for('complaint_pdf', complaint_id=c.id) }}"
+                class="px-2 py-1 rounded-md border border-slate-200 text-xs text-slate-700 hover:bg-slate-50"
+                title="PDF"
+              >
+                PDF
+              </a>
+              {% if not c.is_validated %}
+              <a
+                href="{{ url_for('validate_complaint', complaint_id=c.id) }}"
+                class="px-2 py-1 rounded-md border border-emerald-200 text-xs text-emerald-700 hover:bg-emerald-50"
+                title="Validate"
+              >
+                Validate
+              </a>
+              {% endif %}
+              <form
+                method="post"
+                action="{{ url_for('delete_complaint', complaint_id=c.id) }}"
+                class="inline delete-form"
+              >
+                <button
+                  type="submit"
+                  class="px-2 py-1 rounded-md border border-red-200 text-xs text-red-700 hover:bg-red-50"
+                >
+                  Delete
+                </button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %} {% else %}
+        <tr>
+          <td
+            colspan="9"
+            class="py-6 text-center text-sm text-slate-500"
+          >
+            No complaints found. Create a new one to get started.
+          </td>
+        </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+

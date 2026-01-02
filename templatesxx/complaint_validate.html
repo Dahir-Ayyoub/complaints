@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Validate Complaint {{ complaint.display_number }}{% endblock %}
+
+{% block content %}
+<div class="flex justify-center">
+  <div class="w-full max-w-xl">
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200">
+      <div
+        class="px-6 py-4 border-b border-slate-100 flex items-center justify-between"
+      >
+        <div>
+          <h5 class="text-lg font-semibold text-slate-800">
+            Validate Complaint {{ complaint.display_number }}
+          </h5>
+          <p class="mt-1 text-sm text-slate-500">
+            {{ complaint.title }}
+          </p>
+        </div>
+        <a
+          href="{{ url_for('complaint_detail', complaint_id=complaint.id) }}"
+          class="px-3 py-1.5 rounded-lg border border-slate-300 text-xs text-slate-700 hover:bg-slate-50"
+        >
+          Back
+        </a>
+      </div>
+
+      <div class="px-6 py-5">
+        {% if complaint.is_validated %}
+        <div
+          class="mb-4 px-4 py-3 rounded-lg bg-emerald-50 border border-emerald-200 text-sm text-emerald-800"
+        >
+          This complaint is already marked as validated.
+          {% if complaint.validated_at %}
+          <span class="block text-xs mt-1">
+            Validated on {{ complaint.validated_at.strftime('%Y-%m-%d %H:%M') }}.
+          </span>
+          {% endif %}
+        </div>
+        {% endif %}
+
+        <form method="post" enctype="multipart/form-data" class="space-y-4">
+          <div>
+            <label class="block text-xs font-medium text-slate-600 mb-1">
+              Validation Document
+            </label>
+            <input
+              type="file"
+              name="validation_document"
+              required
+              class="block w-full text-sm text-slate-700 file:mr-4 file:py-2 file:px-3 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200"
+            />
+            <p class="mt-1 text-xs text-slate-500">
+              Attach the official document that confirms the validation of this complaint.
+            </p>
+          </div>
+
+          <div class="flex justify-end pt-2">
+            <button
+              type="submit"
+              class="inline-flex items-center px-5 py-2.5 rounded-lg bg-emerald-600 text-white text-sm font-medium shadow-sm hover:bg-emerald-700 transition-colors"
+            >
+              Confirm Validation
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+

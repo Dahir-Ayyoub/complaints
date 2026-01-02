@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+
+{% block title %}{% if complaint %}Edit Complaint{% else %}New Complaint{% endif %}{% endblock %}
+
+{% block content %}
+<div class="flex justify-center">
+  <div class="w-full max-w-4xl">
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200">
+      <div
+        class="px-6 py-4 border-b border-slate-100 flex items-center justify-between"
+      >
+        <h5 class="text-lg font-semibold text-slate-800">
+          {% if complaint %}
+          Edit Complaint {{ complaint.display_number }}
+          {% else %}
+          Register New Complaint
+          {% endif %}
+        </h5>
+        <a
+          href="{{ url_for('list_complaints') }}"
+          class="inline-flex items-center px-3 py-1.5 rounded-lg border border-slate-300 text-sm text-slate-700 hover:bg-slate-50"
+        >
+          Back to List
+        </a>
+      </div>
+
+      <div class="px-6 py-5">
+        <form method="post" enctype="multipart/form-data" class="space-y-5">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1">
+                Complaint Title
+              </label>
+              <input
+                type="text"
+                name="title"
+                class="w-full rounded-lg border-slate-300 text-sm shadow-sm focus:ring-primary focus:border-primary"
+                required
+                value="{{ (complaint.title if complaint else '') }}"
+              />
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1">
+                Responsible Division
+              </label>
+              <select
+                class="w-full rounded-lg border-slate-300 text-sm shadow-sm focus:ring-primary focus:border-primary"
+                name="division_id"
+                required
+              >
+                <option value="">Select Division</option>
+                {% for d in divisions %}
+                <option
+                  value="{{ d.id }}"
+                  {% if complaint and complaint.division_id == d.id %}selected{% endif %}
+                >
+                  {{ d.name }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1">
+                Complaint Type
+              </label>
+              <select
+                class="w-full rounded-lg border-slate-300 text-sm shadow-sm focus:ring-primary focus:border-primary"
+                name="complaint_type"
+                required
+              >
+                <option
+                  value="IGMAT"
+                  {% if complaint and complaint.complaint_type=='IGMAT' %}selected{% endif %}
+                >
+                  IGMAT (Urgent - 2 days)
+                </option>
+                <option
+                  value="Normal"
+                  {% if complaint and complaint.complaint_type=='Normal' or not complaint %}selected{% endif %}
+                >
+                  Normal (7 days)
+                </option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1">
+                Security Service
+              </label>
+              <select
+                class="w-full rounded-lg border-slate-300 text-sm shadow-sm focus:ring-primary focus:border-primary"
+                name="security_service_id"
+                required
+              >
+                <option value="">Select Security Service</option>
+                {% for s in services %}
+                <option
+                  value="{{ s.id }}"
+                  {% if complaint and complaint.security_service_id == s.id %}selected{% endif %}
+                >
+                  {{ s.name }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1">
+                Local Authority Concerned
+              </label>
+              <select
+                class="w-full rounded-lg border-slate-300 text-sm shadow-sm focus:ring-primary focus:border-primary"
+                name="local_authority_id"
+                required
+              >
+                <option value="">Select Local Authority</option>
+                {% for a in authorities %}
+                <option
+                  value="{{ a.id }}"
+                  {% if complaint and complaint.local_authority_id == a.id %}selected{% endif %}
+                >
+                  {{ a.name }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          {% if complaint %}
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1">
+                Current Deadline
+              </label>
+              <input
+                type="text"
+                class="w-full rounded-lg border-slate-200 bg-slate-50 text-sm text-slate-700"
+                value="{{ complaint.deadline.strftime('%Y-%m-%d') }} ({{ complaint.deadline_status }})"
+                disabled
+              />
+            </div>
+          </div>
+          {% endif %}
+
+          <div>
+            <label class="block text-xs font-medium text-slate-600 mb-1">
+              Complaint Description
+            </label>
+            <textarea
+              class="w-full rounded-lg border-slate-300 text-sm shadow-sm focus:ring-primary focus:border-primary"
+              name="description"
+              rows="6"
+              required
+            >{{ (complaint.description if complaint else '') }}</textarea>
+          </div>
+
+          <div id="documents">
+            <label class="block text-xs font-medium text-slate-600 mb-1">
+              Upload Documents
+            </label>
+            <input
+              type="file"
+              name="documents"
+              class="block w-full text-sm text-slate-700 file:mr-4 file:py-2 file:px-3 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200"
+              multiple
+            />
+            <p class="mt-1 text-xs text-slate-500">
+              Supported formats: PDF, images, Office documents. You can attach multiple files.
+            </p>
+          </div>
+
+          {% if complaint and complaint.documents %}
+          <div>
+            <label class="block text-xs font-medium text-slate-600 mb-2">
+              Existing Documents
+            </label>
+            <ul class="divide-y divide-slate-100 rounded-lg border border-slate-200 bg-slate-50">
+              {% for d in complaint.documents %}
+              <li class="px-4 py-2 flex items-center justify-between">
+                <span class="text-sm text-slate-700">
+                  {{ d.original_filename }}
+                </span>
+                <a
+                  href="{{ url_for('download_document', doc_id=d.id) }}"
+                  class="text-xs text-primary hover:text-primary-light"
+                >
+                  Download
+                </a>
+              </li>
+              {% endfor %}
+            </ul>
+          </div>
+          {% endif %}
+
+          <div class="flex justify-end pt-2">
+            <button
+              type="submit"
+              class="inline-flex items-center px-5 py-2.5 rounded-lg bg-primary text-white text-sm font-medium shadow-sm hover:bg-primary-light transition-colors"
+            >
+              {% if complaint %}Save Changes{% else %}Create Complaint{% endif %}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+

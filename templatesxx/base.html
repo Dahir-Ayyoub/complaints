@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% block title %}Complaints Management{% endblock %}</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: {
+                DEFAULT: "#1d4ed8",
+                light: "#3b82f6",
+                dark: "#1e40af",
+              },
+            },
+          },
+        },
+      };
+    </script>
+  </head>
+  <body class="bg-slate-100 min-h-screen">
+    <nav class="bg-slate-900 text-white shadow-md">
+      <div class="max-w-6xl mx-auto px-4">
+        <div class="flex items-center justify-between h-16">
+          <a
+            href="{{ url_for('list_complaints') }}"
+            class="text-lg font-semibold tracking-wide"
+          >
+            Complaints & Document Management
+          </a>
+          <div class="flex gap-4 text-sm">
+            <a
+              href="{{ url_for('list_complaints') }}"
+              class="hover:text-primary-light transition-colors"
+              >All Complaints</a
+            >
+            <a
+              href="{{ url_for('create_complaint') }}"
+              class="px-3 py-1 rounded-md bg-primary hover:bg-primary-light text-white text-sm font-medium transition-colors"
+              >New Complaint</a
+            >
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <div class="max-w-6xl mx-auto px-4 py-6">
+      {% with messages = get_flashed_messages(with_categories=true) %} {% if
+      messages %}
+      <div class="space-y-2 mb-4">
+        {% for category, message in messages %}
+        <div
+          class="flex items-center justify-between px-4 py-3 rounded-lg text-sm
+          {% if category == 'success' %}
+            bg-emerald-50 text-emerald-800 border border-emerald-200
+          {% elif category == 'danger' %}
+            bg-red-50 text-red-800 border border-red-200
+          {% elif category == 'warning' %}
+            bg-amber-50 text-amber-800 border border-amber-200
+          {% else %}
+            bg-slate-50 text-slate-800 border border-slate-200
+          {% endif %}
+          "
+        >
+          <span>{{ message }}</span>
+          <button
+            type="button"
+            class="ml-4 text-xs text-slate-500 hover:text-slate-700"
+            onclick="this.parentElement.remove()"
+          >
+            ✕
+          </button>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %} {% endwith %}
+
+      {% block content %}{% endblock %}
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  </body>
+</html>
+
+

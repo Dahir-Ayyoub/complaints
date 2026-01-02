@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <title>ورقة إرسال - عمالة إقليم الرحامنة</title>
+    <style>
+        body {
+            font-family: 'Times New Roman', 'Simplified Arabic', serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            margin: 0;
+        }
+        .document-page {
+            background-color: #ffffff;
+            width: 210mm;
+            min-height: 297mm;
+            padding: 50px 70px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            box-sizing: border-box;
+            color: #000;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 30px;
+        }
+        /* Style for the block on the left */
+        .header-left-block {
+            text-align: center;
+            font-size: 14px;
+            font-weight: bold;
+            line-height: 1.5;
+        }
+        /* Style for the date line on the right */
+        .header-right-block {
+            text-align: right;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .reference-line {
+            text-decoration: underline;
+        }
+        .main-titles {
+            text-align: center;
+            margin-top: 20px;
+            margin-bottom: 40px;
+        }
+        .main-titles h1 {
+            font-size: 28px;
+            margin: 5px 0;
+            font-weight: bold;
+        }
+        .main-titles .to-word {
+            font-size: 20px;
+            margin: 10px 0;
+        }
+        .main-titles .document-type {
+            font-size: 30px;
+            font-weight: bold;
+            text-decoration: underline;
+            margin-top: 15px;
+            display: inline-block;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 2px solid black;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 15px;
+            vertical-align: top;
+        }
+        th {
+            font-size: 20px;
+            text-align: center;
+            font-weight: bold;
+            height: 30px;
+        }
+        .col-desc { width: 45%; }
+        .col-count { width: 10%; }
+        .col-notes { width: 45%; text-align: center; }
+
+        .content-area {
+            min-height: 600px;
+        }
+        .description-text {
+            text-align: right;
+            font-size: 18px;
+            line-height: 1.6;
+        }
+        .instruction-text {
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 50px;
+            line-height: 1.6;
+        }
+        .signature-area {
+            margin-top: 250px;
+            font-size: 22px;
+            font-weight: bold;
+            text-align: center;
+            /* Added space below the text */
+            padding-bottom: 200px; 
+        }
+    </style>
+</head>
+<body>
+    <div class="">
+        <!-- Header Section -->
+        <div class="header">
+            <!-- Left Block -->
+            <div class="header-left-block">
+                المملكة المغربية<br>
+                وزارة الداخلية<br>
+                عمالة إقليم الرحامنة<br>
+                <span style="text-decoration: underline; font-weight: normal;">قسم الشؤون الداخلية</span><br>
+                عدد: <span class="reference-line">REFERENCE</span>
+            </div>
+            
+            <!-- Right Block -->
+            <div class="header-right-block">
+                ابن جرير في: <span class="reference-line">DATE</span>
+            </div>
+        </div>
+
+        <!-- Central Titles -->
+        <div class="main-titles">
+            <h1>عامل إقليم الرحامنة</h1>
+            <div class="to-word">إلى</div>
+            <h1>السيد XXX</h1>
+            <div class="document-type">ورقة إرسال</div>
+        </div>
+
+        <!-- Main Table Content -->
+        <table>
+            <thead>
+                <tr>
+                    <th class="col-desc">بيان الوثائق</th>
+                    <th class="col-count">عددها</th>
+                    <th class="col-notes">ملاحظات</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="col-desc content-area">
+                        <div class="description-text">
+                            <p><strong><u>تجدون رفقته:</u></strong></p>
+                            <p>- نسخة من شكاية وردت على مصالح هذه العمالة في اسم <strong>وداتي عبدالله</strong>، بخصوص التحريض والتشهير.</p>
+                        </div>
+                    </td>
+                    <td class="col-count"></td>
+                    <td class="col-notes">
+                        <div class="instruction-text">
+                            " قصد البحث والإفادة مع إجابة المشتكي وموافاة مصالح العمالة بنسخة من الجواب "
+                        </div>
+                        <div class="signature-area">
+                            الإمضاء
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+
+{% block title %}Complaint {{ complaint.display_number }}{% endblock %}
+
+{% block content %}
+<div class="flex justify-center">
+  <div class="w-full max-w-4xl space-y-4">
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200">
+      <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+        <div>
+          <h5 class="text-lg font-semibold text-slate-800">
+            Complaint {{ complaint.display_number }}
+          </h5>
+          <p class="mt-1 text-sm text-slate-500">{{ complaint.title }}</p>
+        </div>
+        <div class="flex gap-2">
+          <a
+            href="{{ url_for('complaint_pdf', complaint_id=complaint.id) }}"
+            class="px-3 py-1.5 rounded-lg border border-slate-300 text-xs text-slate-700 hover:bg-slate-50"
+          >
+            Download PDF
+          </a>
+          <a
+            href="{{ url_for('edit_complaint', complaint_id=complaint.id) }}"
+            class="px-3 py-1.5 rounded-lg border border-blue-200 text-xs text-blue-700 hover:bg-blue-50"
+          >
+            Edit
+          </a>
+          <a
+            href="{{ url_for('list_complaints') }}"
+            class="px-3 py-1.5 rounded-lg border border-slate-200 text-xs text-slate-700 hover:bg-slate-50"
+          >
+            Back
+          </a>
+        </div>
+      </div>
+
+      <div class="px-6 py-5 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div>
+          <h6 class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">
+            Metadata
+          </h6>
+          <dl class="space-y-2 text-sm">
+            <div class="flex justify-between">
+              <dt class="text-slate-500">Division</dt>
+              <dd class="text-slate-800">{{ complaint.division.name }}</dd>
+            </div>
+            <div class="flex justify-between">
+              <dt class="text-slate-500">Security Service</dt>
+              <dd class="text-slate-800">{{ complaint.security_service.name if complaint.security_service else 'Not specified' }}</dd>
+            </div>
+            <div class="flex justify-between">
+              <dt class="text-slate-500">Local Authority</dt>
+              <dd class="text-slate-800">{{ complaint.local_authority.name }}</dd>
+            </div>
+            <div class="flex justify-between items-center">
+              <dt class="text-slate-500">Type</dt>
+              <dd>
+                {% if complaint.complaint_type == 'IGMAT' %}
+                <span
+                  class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700"
+                >
+                  IGMAT
+                </span>
+                {% else %}
+                <span
+                  class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700"
+                >
+                  Normal
+                </span>
+                {% endif %}
+              </dd>
+            </div>
+            <div class="flex justify-between">
+              <dt class="text-slate-500">Created At</dt>
+              <dd class="text-slate-800">
+                {{ complaint.created_at.strftime('%Y-%m-%d %H:%M') }}
+              </dd>
+            </div>
+            <div class="flex justify-between items-center">
+              <dt class="text-slate-500">Deadline</dt>
+              <dd class="text-right">
+                <span class="block text-slate-800">
+                  {{ complaint.deadline.strftime('%Y-%m-%d') }}
+                </span>
+                {% if complaint.deadline_status == 'Expired' %}
+                <span
+                  class="inline-flex mt-1 px-2 py-0.5 rounded-full text-xs font-medium bg-slate-200 text-slate-800"
+                >
+                  Expired
+                </span>
+                {% elif complaint.deadline_status == 'Approaching' %}
+                <span
+                  class="inline-flex mt-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800"
+                >
+                  Approaching
+                </span>
+                {% else %}
+                <span
+                  class="inline-flex mt-1 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800"
+                >
+                  On Track
+                </span>
+                {% endif %}
+              </dd>
+            </div>
+            <div class="flex justify-between items-center">
+              <dt class="text-slate-500">Validation</dt>
+              <dd class="text-right">
+                {% if complaint.is_validated %}
+                <span
+                  class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800"
+                >
+                  Validated
+                </span>
+                {% if complaint.validated_at %}
+                <span class="block text-xs text-slate-500 mt-1">
+                  on {{ complaint.validated_at.strftime('%Y-%m-%d %H:%M') }}
+                </span>
+                {% endif %}
+                {% else %}
+                <span
+                  class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600"
+                >
+                  Pending
+                </span>
+                <a
+                  href="{{ url_for('validate_complaint', complaint_id=complaint.id) }}"
+                  class="block text-xs text-emerald-700 hover:text-emerald-800 mt-1"
+                >
+                  Validate now
+                </a>
+                {% endif %}
+              </dd>
+            </div>
+          </dl>
+        </div>
+        <div class="md:col-span-2">
+          <h6 class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">
+            Description
+          </h6>
+          <div
+            class="text-sm text-slate-800 whitespace-pre-wrap bg-slate-50 border border-slate-200 rounded-lg px-4 py-3"
+          >
+            {{ complaint.description }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200">
+      <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+        <h6 class="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+          Documents
+        </h6>
+        <a
+          href="{{ url_for('edit_complaint', complaint_id=complaint.id) }}#documents"
+          class="px-3 py-1.5 rounded-lg border border-blue-200 text-xs text-blue-700 hover:bg-blue-50"
+        >
+          Add / Update Documents
+        </a>
+      </div>
+
+      <div class="px-6 py-4">
+        {% set normal_docs = complaint.documents|selectattr('is_validation', 'equalto', False)|list %}
+        {% set validation_docs = complaint.documents|selectattr('is_validation', 'equalto', True)|list %}
+
+        {% if normal_docs %}
+        <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">
+          Complaint Documents
+        </h4>
+        <ul class="mb-4 divide-y divide-slate-100 rounded-lg border border-slate-200 bg-slate-50">
+          {% for d in normal_docs %}
+          <li class="px-4 py-2 flex items-center justify-between text-sm">
+            <span>
+              {{ d.original_filename }}
+              <span class="ml-1 text-xs text-slate-500">
+                (uploaded {{ d.uploaded_at.strftime('%Y-%m-%d %H:%M') }})
+              </span>
+            </span>
+            <a
+              href="{{ url_for('download_document', doc_id=d.id) }}"
+              class="text-xs text-primary hover:text-primary-light"
+            >
+              Download
+            </a>
+          </li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+
+        {% if validation_docs %}
+        <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">
+          Validation Documents
+        </h4>
+        <ul class="divide-y divide-slate-100 rounded-lg border border-slate-200 bg-emerald-50">
+          {% for d in validation_docs %}
+          <li class="px-4 py-2 flex items-center justify-between text-sm">
+            <span>
+              {{ d.original_filename }}
+              <span class="ml-1 text-xs text-slate-500">
+                (uploaded {{ d.uploaded_at.strftime('%Y-%m-%d %H:%M') }})
+              </span>
+            </span>
+            <a
+              href="{{ url_for('download_document', doc_id=d.id) }}"
+              class="text-xs text-emerald-700 hover:text-emerald-800"
+            >
+              Download
+            </a>
+          </li>
+          {% endfor %}
+        </ul>
+        {% elif not normal_docs %}
+        <p class="text-sm text-slate-500">
+          No documents attached.
+        </p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+
