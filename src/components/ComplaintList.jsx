@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { getComplaints, getReferenceData, deleteComplaint, uploadDocument, updateComplaintStatus } from '../api'
 
@@ -25,6 +25,10 @@ function ComplaintList() {
   const [validationModal, setValidationModal] = useState({ open: false, complaintId: null, complaintNumber: '' })
   const [validationFile, setValidationFile] = useState(null)
   const [uploading, setUploading] = useState(false)
+  
+  // State for the export dropdown menu
+  const [showExportMenu, setShowExportMenu] = useState(false)
+  const exportMenuRef = useRef(null)
 
   useEffect(() => {
     setLoading(true)
@@ -59,6 +63,19 @@ function ComplaintList() {
     pagination.page,
     pagination.per_page,
   ])
+
+  // Click outside to close export menu
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (exportMenuRef.current && !exportMenuRef.current.contains(event.target)) {
+        setShowExportMenu(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside)
+    }
+  }, [exportMenuRef])
 
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this complaint and all its documents?')) {
@@ -128,20 +145,22 @@ function ComplaintList() {
   }
 
   const handlePrint = () => {
+    setShowExportMenu(false)
     const printWindow = window.open('', '_blank')
-    const tableElement = document.querySelector('table')
-    if (!tableElement) return
+    
+    // Define headers explicitly to exclude 'Actions'
+    const headers = ['Reference', 'Nom', 'Division', 'Service', 'Type', 'Rappel', 'Status', 'Deadline']
     
     let tableHTML = '<table style="width: 100%; border-collapse: collapse; margin-top: 20px;">'
-    const headerRow = tableElement.querySelector('thead tr')
-    if (headerRow) {
-      tableHTML += '<thead><tr>'
-      headerRow.querySelectorAll('th').forEach(th => {
-        tableHTML += `<th style="border: 1px solid #ddd; padding: 8px; text-align: left; background-color: #f2f2f2; font-weight: bold;">${th.textContent.trim()}</th>`
-      })
-      tableHTML += '</tr></thead>'
-    }
     
+    // Build Header
+    tableHTML += '<thead><tr>'
+    headers.forEach(header => {
+      tableHTML += `<th style="border: 1px solid #ddd; padding: 8px; text-align: left; background-color: #f2f2f2; font-weight: bold;">${header}</th>`
+    })
+    tableHTML += '</tr></thead>'
+    
+    // Build Body using state data
     tableHTML += '<tbody>'
     complaints.forEach(complaint => {
       tableHTML += '<tr>'
@@ -153,7 +172,6 @@ function ComplaintList() {
       tableHTML += `<td style="border: 1px solid #ddd; padding: 8px;">${complaint.rappel || '-'}</td>`
       tableHTML += `<td style="border: 1px solid #ddd; padding: 8px;">${complaint.status}</td>`
       tableHTML += `<td style="border: 1px solid #ddd; padding: 8px;">${complaint.deadline}</td>`
-      tableHTML += `<td style="border: 1px solid #ddd; padding: 8px;">-</td>`
       tableHTML += '</tr>'
     })
     tableHTML += '</tbody></table>'
@@ -168,10 +186,49 @@ function ComplaintList() {
         .print-header { margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; }
       </style>
     `
-    printWindow.document.write(`<html><head><title>Print</title>${style}</head><body><div class="print-header"><h1>Complaints Report</h1></div>${tableHTML}</body></html>`)
+    printWindow.document.write(`<html><head><title>Print Complaints</title>${style}</head><body><div class="print-header"><h1>Complaints Report</h1></div>${tableHTML}</body></html>`)
     printWindow.document.close()
     printWindow.focus()
     setTimeout(() => { printWindow.print() }, 250)
+  }
+
+  // UPDATED: Excel Export with BOM and Semicolons
+  const handleDownloadExcel = () => {
+    setShowExportMenu(false)
+    
+    // We use semicolon ';' because Excel in many regions (like Morocco/France) uses it as a separator
+    const separator = ';';
+    const headers = ['Reference', 'Nom', 'Division', 'Service', 'Type', 'Rappel', 'Status', 'Deadline'];
+    
+    const escapeCsv = (str) => {
+      if (str === null || str === undefined) return '';
+      // Clean up string and handle quotes
+      return `"${String(str).replace(/"/g, '""')}"`;
+    }
+
+    const rows = complaints.map(c => [
+      escapeCsv(c.display_number),
+      escapeCsv(c.nom),
+      escapeCsv(c.division.name),
+      escapeCsv(c.security_service?.name),
+      escapeCsv(c.complaint_type),
+      escapeCsv(c.rappel),
+      escapeCsv(c.status),
+      escapeCsv(c.deadline)
+    ].join(separator));
+
+    // Add \uFEFF (BOM) at the beginning so Excel recognizes UTF-8 (for Arabic characters)
+    const csvContent = '\uFEFF' + [headers.join(separator), ...rows].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `complaints_export_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   }
 
   const getStatusBadgeClass = (status) => {
@@ -201,12 +258,33 @@ function ComplaintList() {
           <p className="text-slate-500 mt-1">Gérer et suivre toutes les plaintes dans le système</p>
         </div>
         <div className="flex items-center gap-3">
-          <button
-            onClick={handlePrint}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-all font-semibold shadow-sm"
-          >
-            🖨️ Print
-          </button>
+          {/* Export/Print Dropdown */}
+          <div className="relative" ref={exportMenuRef}>
+            <button
+              onClick={() => setShowExportMenu(!showExportMenu)}
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-all font-semibold shadow-sm"
+            >
+              📥 Export / Print ▼
+            </button>
+            
+            {showExportMenu && (
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-slate-100 z-50 overflow-hidden">
+                <button 
+                  onClick={handlePrint}
+                  className="w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 hover:text-blue-600 border-b border-slate-50"
+                >
+                  🖨️ Print Report
+                </button>
+                <button 
+                  onClick={handleDownloadExcel}
+                  className="w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 hover:text-emerald-600"
+                >
+                  📊 Download Excel
+                </button>
+              </div>
+            )}
+          </div>
+
           <Link
             to="/complaints/new"
             className="inline-flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all font-semibold shadow-md shadow-blue-100"
